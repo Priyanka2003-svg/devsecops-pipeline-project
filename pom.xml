@@ -1,85 +1,76 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+name: DevSecOps Pipeline
 
-  <modelVersion>4.0.0</modelVersion>
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
-  <groupId>com.reva</groupId>
-  <artifactId>secure-app</artifactId>
-  <version>1.0-SNAPSHOT</version>
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
 
-  <name>secure-app</name>
-  <url>http://www.example.com</url>
+    steps:
 
-  <!-- SonarCloud properties -->
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>17</maven.compiler.release>
-    <sonar.organization>priyanka2003-svg-1</sonar.organization>
-    <sonar.projectKey>priyanka2003-svg-1_secure-app</sonar.projectKey>
-    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-  </properties>
+      # 1️⃣ Checkout the repo
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-  <!-- JUnit BOM -->
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.junit</groupId>
-        <artifactId>junit-bom</artifactId>
-        <version>5.11.0</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
+      # 2️⃣ Set up Java 17
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: maven
 
-  <!-- Dependencies -->
-  <dependencies>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-params</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+      # 3️⃣ Build with Maven
+      - name: Build with Maven
+        run: mvn clean install -DskipTests
 
-  <!-- Build Plugins -->
-  <build>
-    <plugins>
+      # 4️⃣ OWASP Dependency Check
+      - name: OWASP Dependency Check
+        run: |
+          mvn org.owasp:dependency-check-maven:check \
+          -Dformat=HTML \
+          -DautoUpdate=false \
+          -DfailOnError=false
 
-      <!-- OWASP Dependency Check -->
-      <plugin>
-        <groupId>org.owasp</groupId>
-        <artifactId>dependency-check-maven</artifactId>
-        <version>9.2.0</version>
-        <configuration>
-          <format>HTML</format>
-          <failBuildOnCVSS>11</failBuildOnCVSS>
-        </configuration>
-      </plugin>
+      # 5️⃣ Upload OWASP report
+      - name: Upload OWASP Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: target
 
-    </plugins>
+      # 6️⃣ SonarCloud scan
+      - name: SonarQube Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn sonar:sonar \
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+          -Dsonar.organization=${{ secrets.SONAR_ORG }} \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-    <!-- Lock Plugin Versions -->
-    <pluginManagement>
-      <plugins>
-        <plugin><artifactId>maven-clean-plugin</artifactId><version>3.4.0</version></plugin>
-        <plugin><artifactId>maven-resources-plugin</artifactId><version>3.3.1</version></plugin>
-        <plugin><artifactId>maven-compiler-plugin</artifactId><version>3.13.0</version></plugin>
-        <plugin><artifactId>maven-surefire-plugin</artifactId><version>3.3.0</version></plugin>
-        <plugin><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version></plugin>
-        <plugin><artifactId>maven-install-plugin</artifactId><version>3.1.2</version></plugin>
-        <plugin><artifactId>maven-deploy-plugin</artifactId><version>3.1.2</version></plugin>
-        <plugin><artifactId>maven-site-plugin</artifactId><version>3.12.1</version></plugin>
-        <plugin><artifactId>maven-project-info-reports-plugin</artifactId><version>3.6.1</version></plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
+      # 7️⃣ Build Docker image
+      - name: Build Docker Image
+        run: docker build -t secure-app:latest .
 
-</project>
+      # 8️⃣ Install Trivy (fixed)
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+
+      # 9️⃣ Scan Docker image with Trivy
+      - name: Scan Docker Image with Trivy
+        run: trivy image --exit-code 1 --severity HIGH,CRITICAL secure-app:latest
+
+      # 🔟 Checkov IaC scan
+      - name: Checkov IaC Scan
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
