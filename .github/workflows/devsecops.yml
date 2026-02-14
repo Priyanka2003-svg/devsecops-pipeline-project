@@ -30,8 +30,10 @@ jobs:
           java-version: '17'
           cache: maven
 
+
       - name: Build with Maven
         run: mvn clean install -DskipTests
+
 
       - name: OWASP Dependency Check
         run: |
@@ -40,11 +42,13 @@ jobs:
             -DautoUpdate=false \
             -DfailOnError=false
 
+
       - name: Upload OWASP Report
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
-          path: target/dependency-check-report.html
+          path: target/dependency-check-report
+
 
       - name: SonarCloud Scan
         env:
@@ -56,17 +60,19 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
+      
       - name: Build Docker Image
         run: docker build -t secure-app:latest .
 
-      # ✅ Install Trivy CLI
-      - name: Install Trivy CLI
-        uses: aquasecurity/setup-trivy@v0.3.0
+     
+      - name: Scan Docker Image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: secure-app:latest
+          severity: HIGH,CRITICAL
+          exit-code: 1
 
-      # ✅ Scan Docker image with Trivy CLI
-      - name: Trivy scan
-        run: trivy image --exit-code 1 --severity HIGH,CRITICAL secure-app:latest
-
+    
       - name: Checkov IaC Scan
         uses: bridgecrewio/checkov-action@master
         with:
