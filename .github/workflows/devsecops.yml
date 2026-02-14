@@ -30,6 +30,7 @@ jobs:
         run: |
           mvn org.owasp:dependency-check-maven:check \
           -Dformat=HTML \
+          -DoutputDirectory=dependency-check-report \
           -DautoUpdate=false \
           -DfailOnError=false
 
@@ -37,5 +38,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
-          path: target/site/dependency-check-report.html
-
+          path: dependency-check-report
