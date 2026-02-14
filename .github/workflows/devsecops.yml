@@ -1,11 +1,12 @@
 name: DevSecOps Pipeline
 
-# ✅ Explicit permissions to satisfy Checkov CKV2_GHA_1
+# ✅ Explicit permissions for Checkov CKV2_GHA_1
 permissions:
   contents: read          # access to repo code
   actions: read           # read access to GitHub Actions
   checks: write           # to post status checks
   pull-requests: write    # for PR updates
+  artifacts: write        # to upload OWASP reports
 
 on:
   push:
@@ -67,16 +68,15 @@ jobs:
       - name: Build Docker Image
         run: docker build -t secure-app:latest .
 
-      # 8️⃣ Install Trivy
-      - name: Install Trivy
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-
-      # 9️⃣ Scan Docker image with Trivy
+      # 8️⃣ Trivy Docker Scan using official Action
       - name: Scan Docker Image with Trivy
-        run: trivy image --exit-code 1 --severity HIGH,CRITICAL secure-app:latest
+        uses: aquasecurity/trivy-action@v0.13.1
+        with:
+          image-ref: secure-app:latest
+          severity: HIGH,CRITICAL
+          exit-code: 1
 
-      # 🔟 Checkov IaC scan
+      # 🔟 Checkov IaC scan (Terraform or other configs)
       - name: Checkov IaC Scan
         uses: bridgecrewio/checkov-action@master
         with:
