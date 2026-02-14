@@ -6,7 +6,6 @@ permissions:
   actions: read           # read access to GitHub Actions
   checks: write           # to post status checks
   pull-requests: write    # for PR updates
-  artifacts: write        # to upload OWASP reports
 
 on:
   push:
@@ -68,7 +67,7 @@ jobs:
       - name: Build Docker Image
         run: docker build -t secure-app:latest .
 
-      # 8️⃣ Install Trivy (fixed, official install script)
+      # 8️⃣ Install Trivy
       - name: Install Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
