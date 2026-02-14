@@ -1,12 +1,13 @@
 name: DevSecOps Pipeline
 
 # ✅ Explicit permissions for Checkov CKV2_GHA_1
+# ✅ Explicit permissions to satisfy Checkov CKV2_GHA_1
 permissions:
   contents: read          # access to repo code
   actions: read           # read access to GitHub Actions
   checks: write           # to post status checks
   pull-requests: write    # for PR updates
-  artifacts: write        # to upload OWASP reports
+
 
 on:
   push:
