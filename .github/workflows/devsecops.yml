@@ -60,7 +60,7 @@ jobs:
         run: docker build -t secure-app:latest .
 
       - name: Scan Docker Image with Trivy
-        uses: aquasecurity/trivy-action@v0.33.1   # ✔ Correct version
+        uses: aquasecurity/trivy-action@v0.32.0  # ✔ Valid
         with:
           image-ref: secure-app:latest
           severity: HIGH,CRITICAL
