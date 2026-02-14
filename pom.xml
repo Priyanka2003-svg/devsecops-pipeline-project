@@ -41,6 +41,18 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <plugins>
+  <plugin>
+    <groupId>org.owasp</groupId>
+    <artifactId>dependency-check-maven</artifactId>
+    <version>9.2.0</version>
+    <configuration>
+      <format>HTML</format>
+      <failBuildOnCVSS>11</failBuildOnCVSS>
+    </configuration>
+  </plugin>
+</plugins>
+
 
   <build>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
