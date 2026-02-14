@@ -19,8 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
-      # 1️⃣ Checkout repo
+      # 1️⃣ Checkout the repo
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -32,7 +31,7 @@ jobs:
           java-version: '17'
           cache: maven
 
-      # 3️⃣ Build Maven
+      # 3️⃣ Build with Maven
       - name: Build with Maven
         run: mvn clean install -DskipTests
 
@@ -44,12 +43,12 @@ jobs:
             -DautoUpdate=false \
             -DfailOnError=false
 
-      # 5️⃣ Upload OWASP report (directory)
+      # 5️⃣ Upload OWASP artifact
       - name: Upload OWASP Report
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
-          path: target/dependency-check-report  # <- directory instead of file
+          path: target/dependency-check-report
 
       # 6️⃣ SonarCloud Scan
       - name: SonarCloud Scan
@@ -62,19 +61,19 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-      # 7️⃣ Build Docker image
+      # 7️⃣ Build Docker
       - name: Build Docker Image
         run: docker build -t secure-app:latest .
 
-      # 8️⃣ Scan Docker image with Trivy (stable latest)
+      # 8️⃣ Trivy scan (works without version error)
       - name: Scan Docker Image with Trivy
-        uses: aquasecurity/trivy-action@v0.35.0  # ✔ Use latest stable version
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: secure-app:latest
           severity: HIGH,CRITICAL
           exit-code: 1
 
-      # 9️⃣ Checkov IaC Scan
+      # 🔟 Checkov IaC scan
       - name: Checkov IaC Scan
         uses: bridgecrewio/checkov-action@master
         with:
