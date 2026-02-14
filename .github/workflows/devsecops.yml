@@ -14,19 +14,17 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Java 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: maven
 
-
       - name: Build with Maven
         run: mvn clean install -DskipTests
-
 
       - name: OWASP Dependency Check
         run: |
@@ -36,7 +34,7 @@ jobs:
           -DfailOnError=false
 
       - name: Upload OWASP Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
           path: target/dependency-check-report.html
