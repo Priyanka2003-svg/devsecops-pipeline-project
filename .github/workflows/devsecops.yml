@@ -46,7 +46,7 @@ jobs:
           path: target
 
       # 6️⃣ SonarCloud scan
-      - name: SonarQube Scan
+      - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
@@ -60,16 +60,15 @@ jobs:
       - name: Build Docker Image
         run: docker build -t secure-app:latest .
 
-      # 8️⃣ Install Trivy (fixed)
-      - name: Install Trivy
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-
-      # 9️⃣ Scan Docker image with Trivy
+      # 8️⃣ + 9️⃣ Scan Docker image with Trivy using official Action
       - name: Scan Docker Image with Trivy
-        run: trivy image --exit-code 1 --severity HIGH,CRITICAL secure-app:latest
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: secure-app:latest
+          exit-code: 1
+          severity: HIGH,CRITICAL
 
-      # 🔟 Checkov IaC scan
+      # 🔟 Checkov IaC scan (Terraform or other configs)
       - name: Checkov IaC Scan
         uses: bridgecrewio/checkov-action@master
         with:
