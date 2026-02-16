@@ -49,24 +49,10 @@
         </dependency>
     </dependencies>
 
-    <!-- Build Plugins -->
+    <!-- Build configuration -->
     <build>
-        <plugins>
 
-            <!-- OWASP Dependency Check -->
-            <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>9.2.0</version>
-                <configuration>
-                    <format>HTML</format>
-                    <failBuildOnCVSS>11</failBuildOnCVSS>
-                </configuration>
-            </plugin>
-
-        </plugins>
-
-        <!-- Lock Plugin Versions -->
+        <!-- Lock plugin versions -->
         <pluginManagement>
             <plugins>
                 <plugin><artifactId>maven-clean-plugin</artifactId><version>3.4.0</version></plugin>
@@ -80,6 +66,51 @@
                 <plugin><artifactId>maven-project-info-reports-plugin</artifactId><version>3.6.1</version></plugin>
             </plugins>
         </pluginManagement>
+
+        <!-- Active plugins -->
+        <plugins>
+            <!-- OWASP Dependency Check -->
+            <plugin>
+    <groupId>org.owasp</groupId>
+    <artifactId>dependency-check-maven</artifactId>
+    <version>12.2.0</version> <!-- correct latest version -->
+    <executions>
+        <execution>
+            <goals>
+                <goal>check</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <format>HTML</format>
+        <outputDirectory>${project.build.directory}</outputDirectory>
+
+        <!-- DO NOT block build on API failure -->
+        <failOnError>false</failOnError>
+
+        <!-- API key from env -->
+        <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+
+        <!-- slow down NVD requests (30s) -->
+        <nvdApiDelay>30000</nvdApiDelay>
+
+        <!-- fallback to local cache if API fails -->
+        <updateOnly>false</updateOnly>
+
+        <!-- optional timeouts -->
+        <connectionTimeout>60000</connectionTimeout>
+        <readTimeout>60000</readTimeout>
+
+        <!-- local database cache folder -->
+        <dataDirectory>${project.build.directory}/dependency-check-data</dataDirectory>
+    </configuration>
+</plugin>
+
+
+            
+            
+        </plugins>
+
     </build>
 
 </project>
